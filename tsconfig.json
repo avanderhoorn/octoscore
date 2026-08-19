@@ -1,0 +1,14 @@
+{
+  "extends": "./.wxt/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "verbatimModuleSyntax": true,
+    // Types come from React; the bytes come from Preact. The vite alias in
+    // wxt.config.ts swaps `react/jsx-runtime` for `preact/jsx-runtime` at build
+    // time, so the import source stays `react` here on purpose.
+    "jsx": "react-jsx"
+  },
+  "include": ["src", "scripts", "*.ts", ".wxt/wxt.d.ts"]
+}

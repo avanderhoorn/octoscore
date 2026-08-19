@@ -1,0 +1,21 @@
+node_modules/
+.output/
+.wxt/
+stats.html
+*.zip
+.env
+.env.local
+
+# macOS
+.DS_Store
+
+# Dev browser profile (web-ext.config.ts) — keeps you signed in to GitHub
+.chrome-profile/
+
+# Scratch space for driving a real browser over the DevTools Protocol when
+# checking selectors against GitHub as it actually renders today.
+.probe/
+
+# Playwright
+test-results/
+playwright-report/

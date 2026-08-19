@@ -1,0 +1,43 @@
+{
+  "name": "octoscore",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Show maintainers what happened the last few times someone reviewed this author's work.",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "compile": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "calibrate": "tsx scripts/calibrate.ts",
+    "postinstall": "wxt prepare",
+    "e2e": "wxt build && playwright test",
+    "e2e:headed": "wxt build && playwright test --headed"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "valibot": "^1.4.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.6",
+    "@octokit/graphql-schema": "^15.26.1",
+    "@playwright/test": "^1.62.1",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@wxt-dev/module-react": "^1.2.2",
+    "jsdom": "^30.0.1",
+    "preact": "^10.29.8",
+    "tsx": "^4.19.0",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10",
+    "web-ext": "^10.5.0",
+    "wxt": "^0.21.3"
+  }
+}

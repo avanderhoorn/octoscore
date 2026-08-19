@@ -1,0 +1,279 @@
+/* Scoped to the shadow root. Nothing here can reach GitHub's DOM and nothing
+   of GitHub's can reach in — that is the whole reason for the shadow root.
+   Colours follow GitHub's light/dark via prefers-color-scheme rather than
+   reading Primer variables, which do not cross the boundary. */
+
+.os,
+.os-bar {
+  --os-fg: #1f2328;
+  --os-dim: #59636e;
+  --os-line: #d1d9e0;
+  --os-bg: #ffffff;
+  --os-accent: #0969da;
+  --os-neg: #a40e26;
+  --os-raise: #f6f8fa;
+  --os-hover: #eff2f5;
+
+  font:
+    12px / 1.5 -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Noto Sans",
+    Helvetica,
+    Arial,
+    sans-serif;
+  color: var(--os-fg);
+  background: var(--os-bg);
+  border: 1px solid var(--os-line);
+
+  /* Hangs off the PR tab strip rather than floating below it.
+     The panel is inserted directly after the page header, whose last element
+     is the tab nav — and the two share an x and a width exactly. So dropping
+     the top border and the gap lets the strip's own bottom border serve as
+     this panel's top edge, and the two read as one surface instead of two
+     stacked boxes. Only the bottom corners are rounded, for the same reason. */
+  border-top: 0;
+  border-radius: 0 0 6px 6px;
+  margin: 0 0 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .os,
+  .os-bar {
+    --os-fg: #f0f6fc;
+    --os-dim: #9198a1;
+    --os-line: #3d444d;
+    --os-bg: #0d1117;
+    --os-accent: #4493f8;
+    --os-neg: #ff9492;
+    --os-raise: #212830;
+    --os-hover: #262c36;
+  }
+}
+
+.os-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--os-line);
+}
+
+.os-title {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.os-tabs {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+}
+
+.os-tab {
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font: inherit;
+  color: var(--os-dim);
+  cursor: pointer;
+}
+
+.os-tab:hover {
+  color: var(--os-fg);
+}
+
+.os-tab-on {
+  color: var(--os-fg);
+  background: color-mix(in srgb, var(--os-fg) 8%, transparent);
+}
+
+.os-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.os-icon {
+  background: none;
+  border: 0;
+  color: var(--os-dim);
+  cursor: pointer;
+  font: inherit;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+.os-icon:hover {
+  color: var(--os-fg);
+}
+
+.os-body {
+  padding: 10px;
+}
+
+.os-lede {
+  margin: 0 0 8px;
+}
+
+.os-note,
+.os-error,
+.os-stale {
+  margin: 0;
+  padding: 10px;
+  color: var(--os-dim);
+}
+
+.os-stale {
+  border-bottom: 1px solid var(--os-line);
+}
+
+.os-error p {
+  margin: 0 0 4px;
+  color: var(--os-fg);
+}
+
+/* The way out of a token error. GitHub's own button metrics, so it reads as
+   part of the page rather than as extension chrome. */
+.os-btn {
+  margin-top: 8px;
+  padding: 3px 12px;
+  font: inherit;
+  font-weight: 500;
+  color: var(--os-fg);
+  background: var(--os-raise);
+  border: 1px solid var(--os-line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.os-btn:hover {
+  background: var(--os-hover);
+}
+
+.os-dim {
+  color: var(--os-dim);
+}
+
+/* A disclosure, not an alarm. It says the sample is short, which is a fact
+   about OUR read, not about the contributor -- so it must not look like a
+   finding against them. FR5 */
+.os-warn {
+  margin: 0 10px 8px;
+  padding: 6px 8px;
+  border-left: 2px solid var(--os-line);
+  color: var(--os-dim);
+  font-size: 11px;
+}
+
+.os-list,
+.os-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.os-row {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 3px 0;
+}
+
+.os-mark {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Deliberately not a red/green traffic light. These are statements of fact,
+   and colouring them as verdicts is exactly what the design refuses to do. */
+.os-mark-replied::before {
+  content: "✓ ";
+}
+.os-mark-pushed::before {
+  content: "~ ";
+}
+.os-mark-silent::before {
+  content: "✗ ";
+}
+.os-mark-unreviewed::before,
+.os-mark-unknown::before {
+  content: "· ";
+}
+
+.os-mark-unknown,
+.os-mark-unreviewed {
+  color: var(--os-dim);
+}
+
+.os-prtitle {
+  color: var(--os-accent);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.os-prtitle:hover {
+  text-decoration: underline;
+}
+
+.os-repo,
+.os-timing {
+  color: var(--os-dim);
+  white-space: nowrap;
+}
+
+.os-timing {
+  grid-column: 2 / -1;
+}
+
+.os-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 0;
+}
+
+.os-pts {
+  font-variant-numeric: tabular-nums;
+  color: var(--os-dim);
+}
+
+.os-neg {
+  color: var(--os-neg);
+}
+
+.os-caveat {
+  cursor: help;
+}
+
+.os-unknown {
+  margin-top: 8px;
+  color: var(--os-dim);
+}
+
+.os-unknown summary {
+  cursor: pointer;
+}
+
+.os-foot {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dotted var(--os-line);
+  color: var(--os-dim);
+}
+
+.os-bar {
+  padding: 4px 10px;
+}
+
+.os-link {
+  background: none;
+  border: 0;
+  color: var(--os-accent);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}

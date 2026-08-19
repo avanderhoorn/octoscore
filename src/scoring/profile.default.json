@@ -1,0 +1,592 @@
+{
+  "id": "default",
+  "name": "Default",
+  "_comment": "Groups are display + one multiply + an optional floor. followThrough aggregates over receipts (PRs where a human non-author reviewer actually engaged). trackRecord sets floorAtZero: absence of history is never a penalty. rule.mode is the ONLY off-switch: 'score' contributes points, 'info' displays without scoring, 'off' is not fetched at all.",
+  "groups": [
+    {
+      "id": "vouch",
+      "label": "Vouched by",
+      "importance": 1,
+      "aboveFold": true
+    },
+    {
+      "id": "followThrough",
+      "label": "After review",
+      "importance": 1,
+      "aboveFold": true
+    },
+    {
+      "id": "trackRecord",
+      "label": "Track record",
+      "importance": 1,
+      "aboveFold": false,
+      "floorAtZero": true
+    },
+    {
+      "id": "standing",
+      "label": "Standing",
+      "importance": 0,
+      "aboveFold": false
+    }
+  ],
+  "rules": [
+    {
+      "id": "vouch-status",
+      "group": "vouch",
+      "signal": "vouchStatus",
+      "mode": "score",
+      "evidence": "practitioner",
+      "note": "Reads a VOUCHED.td file from the repo root (convention borrowed from gitbaz, pattern from Ghostty). A named human in the project explicitly vouched for this person. This is the ONLY signal that can be strongly positive for someone with no history, which is why it is the only counterweight to the newcomer penalty in this whole design. Positive only: a repo-authored denouncement, rendered on the accused person\u2019s PRs by a third-party extension, is a defamation surface with no upside this design needs. A leading \u2018-\u2019 retracts a vouch, it never scores negative. Zero API cost beyond one cached file fetch per repo.",
+      "tiers": [
+        {
+          "eq": "vouched",
+          "points": 30,
+          "label": "Vouched for in VOUCHED.td"
+        }
+      ]
+    },
+    {
+      "id": "reply-rate",
+      "group": "followThrough",
+      "signal": "replyRate",
+      "mode": "score",
+      "evidence": "novel",
+      "note": "Receipts where the author replied or pushed after a human reviewer engaged. Not validated in the literature as an author-level trait; endorsed as a review heuristic by GitHub's agentic code review guidance. Calibrate before trusting.",
+      "tiers": [
+        {
+          "gte": 0.85,
+          "points": 25,
+          "label": "Acted on almost every reviewed PR"
+        },
+        {
+          "gte": 0.6,
+          "points": 15,
+          "label": "Acted on most reviewed PRs"
+        },
+        {
+          "gte": 0.35,
+          "points": 2,
+          "label": "Acted on some reviewed PRs"
+        },
+        {
+          "lt": 0.35,
+          "points": -20,
+          "label": "Rarely acted after review"
+        }
+      ]
+    },
+    {
+      "id": "prose-reply-rate",
+      "group": "followThrough",
+      "signal": "proseReplyRate",
+      "mode": "score",
+      "evidence": "novel",
+      "note": "Of receipts where a reviewer asked a question, those followed by a written reply from the author of at least ~120 characters. This measures that a substantive reply was POSTED. It does not and cannot measure comprehension or authorship, and no label here may imply it does. \u00a711",
+      "tiers": [
+        {
+          "gte": 0.7,
+          "points": 20,
+          "label": "Usually posts a substantive written reply after questions"
+        },
+        {
+          "gte": 0.4,
+          "points": 10,
+          "label": "Sometimes posts a substantive written reply after questions"
+        },
+        {
+          "gte": 0.1,
+          "points": 0,
+          "label": "Rarely posts a written reply after questions"
+        },
+        {
+          "lt": 0.1,
+          "points": -15,
+          "label": "Pushed commits after questions but never wrote a reply"
+        }
+      ]
+    },
+    {
+      "id": "response-latency",
+      "group": "followThrough",
+      "signal": "medianResponseHours",
+      "mode": "info",
+      "note": "Informational. Scoring latency penalises distant timezones and evening contributors; slow-but-converges is a fine outcome.",
+      "tiers": [
+        {
+          "lt": 72,
+          "points": 0,
+          "label": "Usually replied within 3 days"
+        },
+        {
+          "lt": 336,
+          "points": 0,
+          "label": "Usually replied within 2 weeks"
+        },
+        {
+          "gte": 336,
+          "points": 0,
+          "label": "Slow to reply after review"
+        }
+      ]
+    },
+    {
+      "id": "project-adjusted-stall",
+      "group": "followThrough",
+      "signal": "projectAdjustedStallRate",
+      "mode": "off",
+      "evidence": "controls-confound",
+      "note": "Receipts where the author stalled AND the project had been faster than they were. Li et al. 2021 (IEEE TSE) found PR abandonment is primarily maintainer-caused, so an unadjusted abandonment rate measures the wrong causal direction. Off pending calibration.",
+      "tiers": [
+        {
+          "lt": 0.1,
+          "points": 8,
+          "label": "Sees reviewed PRs through"
+        },
+        {
+          "lt": 0.4,
+          "points": 0,
+          "label": "Some reviewed PRs went quiet"
+        },
+        {
+          "gte": 0.4,
+          "points": -12,
+          "label": "Often went quiet while the project was waiting"
+        }
+      ]
+    },
+    {
+      "id": "merged-prs-this-repo",
+      "group": "trackRecord",
+      "signal": "mergedPrsThisRepo",
+      "mode": "score",
+      "evidence": "strong",
+      "note": "Gousios 2014; Rahman & Rigby 2019. Repo-specific prior contribution outperforms cross-repo volume.",
+      "tiers": [
+        {
+          "gte": 10,
+          "points": 25,
+          "label": "10+ merged PRs in this repo"
+        },
+        {
+          "gte": 3,
+          "points": 16,
+          "label": "3+ merged PRs in this repo"
+        },
+        {
+          "gte": 1,
+          "points": 10,
+          "label": "Has merged here before"
+        }
+      ]
+    },
+    {
+      "id": "author-association",
+      "group": "trackRecord",
+      "signal": "authorAssociation",
+      "mode": "score",
+      "evidence": "strong",
+      "note": "Largest single binary predictor of PR acceptance across multiple studies.",
+      "tiers": [
+        {
+          "eq": "MEMBER",
+          "points": 20,
+          "label": "Org member"
+        },
+        {
+          "eq": "OWNER",
+          "points": 20,
+          "label": "Repo owner"
+        },
+        {
+          "eq": "COLLABORATOR",
+          "points": 18,
+          "label": "Repo collaborator"
+        },
+        {
+          "eq": "CONTRIBUTOR",
+          "points": 8,
+          "label": "Previous contributor"
+        },
+        {
+          "eq": "FIRST_TIME_CONTRIBUTOR",
+          "points": 0,
+          "label": "First PR to this repo"
+        },
+        {
+          "eq": "NONE",
+          "points": 0,
+          "label": "No prior association"
+        }
+      ]
+    },
+    {
+      "id": "merge-rate",
+      "group": "trackRecord",
+      "signal": "mergeRate",
+      "mode": "score",
+      "evidence": "strong",
+      "note": "Described in the literature as the strongest single predictor. Counts only PRs on repos they don't own where someone else made the call: self-merges are excluded from both sides, since commit rights are scored separately and are not another person's endorsement. null below 10 such PRs.",
+      "tiers": [
+        {
+          "gte": 0.9,
+          "points": 15,
+          "label": "90%+ merged when someone else decided"
+        },
+        {
+          "gte": 0.75,
+          "points": 10,
+          "label": "75%+ merged when someone else decided"
+        },
+        {
+          "gte": 0.5,
+          "points": 3,
+          "label": "Half merged when someone else decided"
+        },
+        {
+          "lt": 0.5,
+          "points": 0,
+          "label": "Under half merged when someone else decided"
+        }
+      ]
+    },
+    {
+      "id": "merged-by-others-external",
+      "group": "trackRecord",
+      "signal": "mergedByOthersExternal",
+      "mode": "score",
+      "evidence": "supported",
+      "note": "Lifetime count of merged PRs on repos the author does NOT own. A raw 'merged PR count' is inflatable to any number by merging your own PRs in your own repos; excluding owned repos is the honest version. Includes the rare external self-merge, which requires commit rights and is scored separately by self-merge-external.",
+      "tiers": [
+        {
+          "gte": 200,
+          "points": 12,
+          "label": "200+ PRs merged on repos they don't own"
+        },
+        {
+          "gte": 50,
+          "points": 9,
+          "label": "50+ PRs merged on repos they don't own"
+        },
+        {
+          "gte": 10,
+          "points": 5,
+          "label": "10+ PRs merged on repos they don't own"
+        },
+        {
+          "gte": 1,
+          "points": 2,
+          "label": "Has had a PR merged on a repo they don't own"
+        }
+      ]
+    },
+    {
+      "id": "unique-mergers",
+      "group": "trackRecord",
+      "signal": "uniqueMergers",
+      "mode": "score",
+      "evidence": "supported",
+      "note": "Count of DISTINCT maintainers who have merged this person's PRs. Breadth of trust rather than volume: N independent people each decided this person's work was worth accepting. Substantially harder to manufacture than a PR count, and it does not reward spraying. Free.",
+      "tiers": [
+        {
+          "gte": 15,
+          "points": 14,
+          "label": "15+ different maintainers have merged their work"
+        },
+        {
+          "gte": 5,
+          "points": 10,
+          "label": "5+ different maintainers have merged their work"
+        },
+        {
+          "gte": 2,
+          "points": 5,
+          "label": "2+ different maintainers have merged their work"
+        },
+        {
+          "gte": 1,
+          "points": 2,
+          "label": "One maintainer has merged their work"
+        }
+      ]
+    },
+    {
+      "id": "self-merge-external",
+      "group": "trackRecord",
+      "signal": "selfMergeExternal",
+      "mode": "score",
+      "evidence": "supported",
+      "note": "Distinct repos the author does NOT own where they merged their own PR, which means someone granted them commit rights there. Counted per REPO: five self-merges on one repo is one delegation, not five. Strong delegated-trust signal.",
+      "tiers": [
+        {
+          "gte": 3,
+          "points": 12,
+          "label": "Has commit rights on 3+ repos they don't own"
+        },
+        {
+          "gte": 1,
+          "points": 6,
+          "label": "Has commit rights on a repo they don't own"
+        }
+      ]
+    },
+    {
+      "id": "self-merge-own-only",
+      "group": "trackRecord",
+      "signal": "selfMergeOwnShare",
+      "mode": "info",
+      "evidence": "supported",
+      "note": "Informational, and deliberately unscored. Flags the case where a large merged-PR count is entirely self-merges in the author's own repos. Shown so the reader isn't impressed by a big number that means nothing; not penalised, because working alone on your own projects is not a fault.",
+      "tiers": [
+        {
+          "gte": 0.9,
+          "points": 0,
+          "label": "Merged PRs are almost all self-merges on own repos"
+        },
+        {
+          "gte": 0.5,
+          "points": 0,
+          "label": "Many merged PRs are self-merges on own repos"
+        }
+      ]
+    },
+    {
+      "id": "issues-opened-here",
+      "group": "trackRecord",
+      "signal": "issuesOpenedHere",
+      "mode": "score",
+      "evidence": "practitioner",
+      "note": "Issues filed by this author in THIS repo. Engagement with the project beyond dropping code, and closest cheap proxy for 'talked to us before sending a patch'. One aliased search, batched with the existing count query.",
+      "tiers": [
+        {
+          "gte": 5,
+          "points": 10,
+          "label": "Filed 5+ issues in this repo"
+        },
+        {
+          "gte": 1,
+          "points": 6,
+          "label": "Has filed issues in this repo"
+        }
+      ]
+    },
+    {
+      "id": "linked-issue-rate",
+      "group": "trackRecord",
+      "signal": "linkedIssueRate",
+      "mode": "score",
+      "evidence": "supported",
+      "note": "Rahman & Rigby 2019. PRs referencing an issue indicate engagement with the project's backlog rather than drive-by changes.",
+      "tiers": [
+        {
+          "gte": 0.6,
+          "points": 10,
+          "label": "Usually links PRs to issues"
+        },
+        {
+          "gte": 0.25,
+          "points": 5,
+          "label": "Sometimes links PRs to issues"
+        },
+        {
+          "lt": 0.25,
+          "points": 0,
+          "label": "Rarely links PRs to issues"
+        }
+      ]
+    },
+    {
+      "id": "active-years",
+      "group": "trackRecord",
+      "signal": "activeYears",
+      "mode": "score",
+      "evidence": "moderate",
+      "tiers": [
+        {
+          "gte": 8,
+          "points": 10,
+          "label": "8+ years of contribution activity"
+        },
+        {
+          "gte": 4,
+          "points": 8,
+          "label": "4+ years of contribution activity"
+        },
+        {
+          "gte": 2,
+          "points": 5,
+          "label": "2+ years of contribution activity"
+        },
+        {
+          "gte": 1,
+          "points": 2,
+          "label": "1+ year of contribution activity"
+        }
+      ]
+    },
+    {
+      "id": "reviews-given",
+      "group": "trackRecord",
+      "signal": "reviewsGiven",
+      "mode": "score",
+      "evidence": "moderate",
+      "note": "Tsay 2014 'prior interactions'. Indirect: reviewing others is evidence of investment in a project's process.",
+      "tiers": [
+        {
+          "gte": 50,
+          "points": 12,
+          "label": "50+ PR reviews given (12mo)"
+        },
+        {
+          "gte": 10,
+          "points": 8,
+          "label": "10+ PR reviews given (12mo)"
+        },
+        {
+          "gte": 1,
+          "points": 4,
+          "label": "Reviews others' PRs (12mo)"
+        }
+      ]
+    },
+    {
+      "id": "avg-pr-size",
+      "group": "trackRecord",
+      "signal": "avgPrSizeLines",
+      "mode": "info",
+      "evidence": "strong",
+      "note": "Strongly supported as a predictor (negative direction) but informational here: it describes past PRs, and the maintainer can see the size of the PR in front of them.",
+      "tiers": [
+        {
+          "lt": 400,
+          "points": 0,
+          "label": "Past PRs typically focused"
+        },
+        {
+          "lt": 2000,
+          "points": 0,
+          "label": "Past PRs medium sized"
+        },
+        {
+          "gte": 2000,
+          "points": 0,
+          "label": "Past PRs typically very large"
+        }
+      ]
+    },
+    {
+      "id": "ci-success-rate",
+      "group": "trackRecord",
+      "signal": "ciSuccessRate",
+      "mode": "off",
+      "evidence": "supported",
+      "note": "Share of receipt PRs whose latest commit has a green status rollup, as a ratio in 0..1 like every other rate here. Read at view time, NOT at submission: a PR that landed red and was fixed reads green. Meaningless on repos without CI, which report unknown and score nothing. null below 3 PRs with any checks at all.",
+      "tiers": [
+        {
+          "gte": 0.9,
+          "points": 8,
+          "label": "CI green on nearly all their recent PRs"
+        },
+        {
+          "lt": 0.4,
+          "points": 0,
+          "label": "CI red on most of their recent PRs"
+        }
+      ]
+    },
+    {
+      "id": "account-age",
+      "group": "standing",
+      "signal": "accountAgeDays",
+      "mode": "off",
+      "evidence": "contested",
+      "note": "Correlates with resources and sophistication rather than contribution quality; penalises exactly the newcomers a project wants to attract.",
+      "tiers": [
+        {
+          "gte": 2920,
+          "points": 6,
+          "label": "Account 8+ years old"
+        },
+        {
+          "gte": 730,
+          "points": 3,
+          "label": "Account 2+ years old"
+        }
+      ]
+    },
+    {
+      "id": "followers",
+      "group": "standing",
+      "signal": "followers",
+      "mode": "off",
+      "evidence": "contested",
+      "note": "Terrell et al. 2017 (3M+ PRs): visible identity signals bias acceptance independent of code quality.",
+      "tiers": [
+        {
+          "gte": 1000,
+          "points": 6,
+          "label": "1000+ followers"
+        },
+        {
+          "gte": 100,
+          "points": 3,
+          "label": "100+ followers"
+        }
+      ]
+    },
+    {
+      "id": "standing-flags",
+      "group": "standing",
+      "signal": "hasStandingFlag",
+      "mode": "off",
+      "evidence": "contested",
+      "tiers": [
+        {
+          "eq": true,
+          "points": 8,
+          "label": "GitHub Star / employee / bounty hunter"
+        }
+      ]
+    }
+  ],
+  "_dropped": {
+    "prsPerRepo": "No supporting evidence found in the PR-acceptance literature.",
+    "multiDayPrRate": "The literature measures PR lifetime, not author work style. Confounded with review latency and with legitimately small changes.",
+    "abandonmentRate": "Replaced by projectAdjustedStallRate. Li et al. 2021 found abandonment is primarily maintainer-caused.",
+    "descriptionRate": "Superseded by linkedIssueRate, which has direct empirical support.",
+    "mergedPrsGlobal": "Split into mergedByOthersExternal / selfMergeExternal / selfMergeOwnShare. A raw global merged count is inflatable by self-merging in your own repos."
+  },
+  "_rejected_from_prior_art": {
+    "popularRepoPRs": "SlopScore scores PRs to 100+ star repos. Popularity is not a quality bar, and it biases against niche and domain-specific work.",
+    "profileCompleteness": "SlopScore adds points for bio + company. Trivially gameable and correlates with employment status.",
+    "prsPerDayOnNewAccounts": "SlopScore penalises new accounts with high PR volume. Deliberately omitted: this document's Non-Goals state the tool is not a spam defence, and a fresh account defeats it anyway.",
+    "neutral50Baseline": "Both competitors default missing data to 50/100, which makes 'unknown' and 'mediocre' the same number. This profile uses null instead, and null never scores.",
+    "trafficLightGrades": "SlopScore emits red/yellow/green. Violates the neutral-treatment requirement."
+  },
+  "_bands_note": "Thresholds are a FRACTION of the maximum score the currently-active rules (mode \"score\", group importance > 0) can award, not absolute points. An additive score has no fixed ceiling, so absolute thresholds silently rot whenever a rule is added, removed or reweighted \u2014 which a user-editable config invites. Ratios stay meaningful under any config. Labels themselves still need real calibration (REQUIREMENTS.md \u00a711).",
+  "bands": [
+    {
+      "gtePct": 0.75,
+      "label": "Long track record, engages with review"
+    },
+    {
+      "gtePct": 0.45,
+      "label": "Established"
+    },
+    {
+      "gtePct": 0.18,
+      "label": "Some history"
+    },
+    {
+      "gtePct": 0.0,
+      "label": "Limited public history"
+    },
+    {
+      "gtePct": -0.12,
+      "label": "Mixed signals"
+    },
+    {
+      "gtePct": -99,
+      "label": "Reviewed PRs often went unanswered"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- A full tab, not Chrome's embedded dialog: this page is first-run token
+         entry plus a control per signal, and it is where openOptionsPage()
+         lands on install. WXT reads options_ui from this meta tag, so setting
+         it in wxt.config.ts is silently overridden. -->
+    <meta name="manifest.open_in_tab" content="true" />
+    <title>OctoScore settings</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>
